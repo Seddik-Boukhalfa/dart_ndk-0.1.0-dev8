@@ -31,8 +31,15 @@ class Nip01Event {
     id = _calculateId(pubKey, this.createdAt, kind, tags, content);
   }
 
-  Nip01Event._(this.id, this.pubKey, this.createdAt, this.kind, this.tags,
-      this.content, this.sig);
+  Nip01Event._(
+    this.id,
+    this.pubKey,
+    this.createdAt,
+    this.kind,
+    this.tags,
+    this.content,
+    this.sig,
+  );
 
   factory Nip01Event.fromJson(Map<dynamic, dynamic> data) {
     final id = data['id'] as String;
@@ -161,6 +168,34 @@ class Nip01Event {
       }
     }
     return null;
+  }
+
+  factory Nip01Event.deserialize(input, {bool verify = true}) {
+    Map<String, dynamic> json = {};
+
+    if (input.length == 2) {
+      json = input[1] as Map<String, dynamic>;
+    } else if (input.length == 3) {
+      json = input[2] as Map<String, dynamic>;
+    } else {
+      throw Exception('invalid input');
+    }
+
+    var tags = (json['tags'] as List<dynamic>)
+        .map((e) => (e as List<dynamic>)
+            .map((e) => e.runtimeType == String ? e as String : '')
+            .toList())
+        .toList();
+
+    return Nip01Event._(
+      json['id'],
+      json['pubkey'],
+      json['created_at'],
+      json['kind'],
+      tags,
+      json['content'],
+      json['sig'],
+    );
   }
 
   @override

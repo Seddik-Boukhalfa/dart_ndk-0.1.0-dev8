@@ -27,14 +27,15 @@ class RelaySet {
 
   List<NotCoveredPubKey> notCoveredPubkeys = [];
 
-  RelaySet(
-      {required this.name,
-      required this.pubKey,
-      this.relayMinCountPerPubkey = 0,
-      required this.relaysMap,
-      this.notCoveredPubkeys = const [],
-      required this.direction,
-      this.fallbackToBootstrapRelays = true});
+  RelaySet({
+    required this.name,
+    required this.pubKey,
+    this.relayMinCountPerPubkey = 0,
+    required this.relaysMap,
+    this.notCoveredPubkeys = const [],
+    required this.direction,
+    this.fallbackToBootstrapRelays = true,
+  });
 
   static buildId(String name, String pubKey) {
     return "$name,$pubKey";

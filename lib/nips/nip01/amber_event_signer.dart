@@ -100,6 +100,11 @@ class AmberEventSigner implements EventSigner {
   }
 
   @override
+  bool isGuest() {
+    return false;
+  }
+
+  @override
   Future<Nip01Event?> decrypt44Event(
     Nip01Event event, {
     String? id,

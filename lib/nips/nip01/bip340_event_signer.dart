@@ -80,6 +80,11 @@ class Bip340EventSigner implements EventSigner {
     return Helpers.isNotBlank(privateKey);
   }
 
+  @override
+  bool isGuest() {
+    return !Helpers.isNotBlank(privateKey);
+  }
+
   String? getPrivateKey() {
     return privateKey;
   }

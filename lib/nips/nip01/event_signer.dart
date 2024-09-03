@@ -25,4 +25,6 @@ abstract class EventSigner {
   });
 
   bool canSign();
+
+  bool isGuest();
 }
