@@ -269,7 +269,7 @@ class RelayManager {
   }
 
   Future<NostrRequest> subscription(
-    Filter filter,
+    List<Filter> filters,
     RelaySet relaySet, {
     bool splitRequestsByPubKeyMappings = true,
   }) async {
@@ -278,14 +278,14 @@ class RelayManager {
         Helpers.getRandomString(10),
         eventVerifier: eventVerifier,
       ),
-      filter,
+      filters,
       relaySet,
       splitRequestsByPubKeyMappings: splitRequestsByPubKeyMappings,
     );
   }
 
   Future<NostrRequest> query(
-    Filter filter,
+    List<Filter> filters,
     RelaySet relaySet, {
     int idleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT,
     bool splitRequestsByPubKeyMappings = true,
@@ -299,7 +299,7 @@ class RelayManager {
           closeNostrRequest(request);
         },
       ),
-      filter,
+      filters,
       relaySet,
       splitRequestsByPubKeyMappings: splitRequestsByPubKeyMappings,
     );
@@ -1208,26 +1208,35 @@ class RelayManager {
 
   Future<NostrRequest> doNostrRequest(
     NostrRequest nostrRequest,
-    Filter filter,
+    List<Filter> filters,
     RelaySet relaySet, {
     bool splitRequestsByPubKeyMappings = true,
   }) async {
     if (splitRequestsByPubKeyMappings) {
-      relaySet.splitIntoRequests(filter, nostrRequest);
+      relaySet.splitIntoRequests(filters, nostrRequest);
 
-      print(
-          "request for ${filter.authors != null ? filter.authors!.length : 0} authors with kinds: ${filter.kinds} made requests to ${nostrRequest.requests.length} relays");
+      for (final filter in filters) {
+        print(
+            "request for ${filter.authors != null ? filter.authors!.length : 0} authors with kinds: ${filter.kinds} made requests to ${nostrRequest.requests.length} relays");
+      }
 
       if (nostrRequest.requests.isEmpty && relaySet.fallbackToBootstrapRelays) {
-        print(
-            "making fallback requests to ${bootstrapRelays.length} bootstrap relays for ${filter.authors != null ? filter.authors!.length : 0} authors with kinds: ${filter.kinds}");
+        for (final filter in filters) {
+          print(
+              "making fallback requests to ${bootstrapRelays.length} bootstrap relays for ${filter.authors != null ? filter.authors!.length : 0} authors with kinds: ${filter.kinds}");
+        }
+
         for (var url in bootstrapRelays) {
-          nostrRequest.addRequest(url, RelaySet.sliceFilterAuthors(filter));
+          for (final filter in filters) {
+            nostrRequest.addRequest(url, RelaySet.sliceFilterAuthors(filter));
+          }
         }
       }
     } else {
       for (var url in relaySet.urls) {
-        nostrRequest.addRequest(url, RelaySet.sliceFilterAuthors(filter));
+        for (final filter in filters) {
+          nostrRequest.addRequest(url, RelaySet.sliceFilterAuthors(filter));
+        }
       }
     }
     nostrRequests[nostrRequest.id] = nostrRequest;
@@ -1263,13 +1272,17 @@ class RelayManager {
     String id = Helpers.getRandomString(10);
 
     NostrRequest nostrRequest = closeOnEOSE
-        ? NostrRequest.query(id, eventVerifier: eventVerifier, timeout: timeout,
+        ? NostrRequest.query(
+            id,
+            eventVerifier: eventVerifier,
+            timeout: timeout,
             onTimeout: (request) {
-            closeNostrRequest(request);
-            if (onTimeout != null) {
-              onTimeout();
-            }
-          })
+              closeNostrRequest(request);
+              if (onTimeout != null) {
+                onTimeout();
+              }
+            },
+          )
         : NostrRequest.subscription(id, eventVerifier: eventVerifier);
 
     for (var url in urls) {
@@ -1559,7 +1572,6 @@ class RelayManager {
     for (var pubKey in pubKeys) {
       Metadata? userMetadata = cacheManager.loadMetadata(pubKey);
       if (userMetadata == null) {
-        // TODO check if not too old (time passed since last refreshed timestamp)
         missingPubKeys.add(pubKey);
       }
     }
@@ -1569,14 +1581,20 @@ class RelayManager {
       print("loading missing user metadatas ${missingPubKeys.length}");
       try {
         await for (final event in (await query(
-                idleTimeout: 1,
-                splitRequestsByPubKeyMappings: splitRequestsByPubKeyMappings,
-                Filter(authors: missingPubKeys, kinds: [Metadata.KIND]),
-                relaySet))
+          idleTimeout: 1,
+          splitRequestsByPubKeyMappings: splitRequestsByPubKeyMappings,
+          [
+            Filter(authors: missingPubKeys, kinds: [Metadata.KIND])
+          ],
+          relaySet,
+        ))
             .stream
-            .timeout(const Duration(seconds: 5), onTimeout: (sink) {
-          print("timeout metadatas.length:${metadatas.length}");
-        })) {
+            .timeout(
+          const Duration(seconds: 5),
+          onTimeout: (sink) {
+            print("timeout metadatas.length:${metadatas.length}");
+          },
+        )) {
           if (metadatas[event.pubKey] == null ||
               metadatas[event.pubKey]!.updatedAt! < event.createdAt) {
             metadatas[event.pubKey] = Metadata.fromEvent(event);

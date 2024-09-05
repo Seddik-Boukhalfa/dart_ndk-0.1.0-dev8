@@ -195,11 +195,9 @@ void main() async {
           direction: RelayDirection.outbox,
           relayMinCountPerPubKey: RelayManager.DEFAULT_BEST_RELAYS_MIN_COUNT);
 
-      Stream<Nip01Event> query = (await manager.query(
-              Filter(
-                  kinds: [Nip01Event.TEXT_NODE_KIND],
-                  authors: [key4.publicKey]),
-              relaySet))
+      Stream<Nip01Event> query = (await manager.query([
+        Filter(kinds: [Nip01Event.TEXT_NODE_KIND], authors: [key4.publicKey]),
+      ], relaySet))
           .stream;
 
       await for (final event in query.take(4)) {
@@ -249,16 +247,16 @@ void main() async {
           print("  ${relayNames[url]} => has ${pubKeyMappings.length} follows");
         }
       });
-      Stream<Nip01Event> query = (await manager.query(
-              Filter(kinds: [
-                Nip01Event.TEXT_NODE_KIND
-              ], authors: [
-                key1.publicKey,
-                key2.publicKey,
-                key3.publicKey,
-                key4.publicKey
-              ]),
-              relaySet))
+      Stream<Nip01Event> query = (await manager.query([
+        Filter(kinds: [
+          Nip01Event.TEXT_NODE_KIND
+        ], authors: [
+          key1.publicKey,
+          key2.publicKey,
+          key3.publicKey,
+          key4.publicKey
+        ]),
+      ], relaySet))
           .stream;
 
       await for (final event in query) {

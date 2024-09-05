@@ -43,46 +43,48 @@ class RelaySet {
 
   static const int MAX_AUTHORS_PER_REQUEST = 100;
 
-  void splitIntoRequests(Filter filter, NostrRequest groupRequest) {
-    for (var entry in relaysMap.entries) {
-      String url = entry.key;
-      List<PubkeyMapping> pubKeyMappings = entry.value;
-      if (pubKeyMappings.isEmpty) {
-        groupRequest.addRequest(url, [filter]);
-      } else if (filter.authors != null &&
-          filter.authors!.isNotEmpty &&
-          direction == RelayDirection.outbox) {
-        List<String> pubKeysForRelay = [];
-        for (String pubKey in filter.authors!) {
-          if (pubKeyMappings.any((pubKeyMapping) =>
-              pubKey == pubKeyMapping.pubKey ||
-              notCoveredPubkeys.any((element) => element.pubKey == pubKey))) {
-            pubKeysForRelay.add(pubKey);
+  void splitIntoRequests(List<Filter> filters, NostrRequest groupRequest) {
+    for (final filter in filters) {
+      for (var entry in relaysMap.entries) {
+        String url = entry.key;
+        List<PubkeyMapping> pubKeyMappings = entry.value;
+        if (pubKeyMappings.isEmpty) {
+          groupRequest.addRequest(url, [filter]);
+        } else if (filter.authors != null &&
+            filter.authors!.isNotEmpty &&
+            direction == RelayDirection.outbox) {
+          List<String> pubKeysForRelay = [];
+          for (String pubKey in filter.authors!) {
+            if (pubKeyMappings.any((pubKeyMapping) =>
+                pubKey == pubKeyMapping.pubKey ||
+                notCoveredPubkeys.any((element) => element.pubKey == pubKey))) {
+              pubKeysForRelay.add(pubKey);
+            }
           }
-        }
-        if (pubKeysForRelay.isNotEmpty) {
-          groupRequest.addRequest(url,
-              sliceFilterAuthors(filter.cloneWithAuthors(pubKeysForRelay)));
-        }
-      } else if (filter.pTags != null &&
-          filter.pTags!.isNotEmpty &&
-          direction == RelayDirection.inbox) {
-        List<String> pubKeysForRelay = [];
-        for (String pubKey in filter.pTags!) {
-          if (pubKeyMappings.any((pubKeyMapping) =>
-              pubKey == pubKeyMapping.pubKey ||
-              notCoveredPubkeys.any((element) => element.pubKey == pubKey))) {
-            pubKeysForRelay.add(pubKey);
+          if (pubKeysForRelay.isNotEmpty) {
+            groupRequest.addRequest(url,
+                sliceFilterAuthors(filter.cloneWithAuthors(pubKeysForRelay)));
           }
+        } else if (filter.pTags != null &&
+            filter.pTags!.isNotEmpty &&
+            direction == RelayDirection.inbox) {
+          List<String> pubKeysForRelay = [];
+          for (String pubKey in filter.pTags!) {
+            if (pubKeyMappings.any((pubKeyMapping) =>
+                pubKey == pubKeyMapping.pubKey ||
+                notCoveredPubkeys.any((element) => element.pubKey == pubKey))) {
+              pubKeysForRelay.add(pubKey);
+            }
+          }
+          if (pubKeysForRelay.isNotEmpty) {
+            groupRequest.addRequest(url,
+                sliceFilterAuthors(filter.cloneWithPTags(pubKeysForRelay)));
+          }
+        } else if (filter.eTags != null && direction == RelayDirection.inbox) {
+          groupRequest.addRequest(url, [filter]);
+        } else {
+          /// TODO ????
         }
-        if (pubKeysForRelay.isNotEmpty) {
-          groupRequest.addRequest(
-              url, sliceFilterAuthors(filter.cloneWithPTags(pubKeysForRelay)));
-        }
-      } else if (filter.eTags != null && direction == RelayDirection.inbox) {
-        groupRequest.addRequest(url, [filter]);
-      } else {
-        /// TODO ????
       }
     }
   }

@@ -31,6 +31,7 @@ class DbEvent extends Nip01Event {
           return true;
         }
       }
+
       return false;
     }).map((e) {
       List<dynamic> list = e as List;
