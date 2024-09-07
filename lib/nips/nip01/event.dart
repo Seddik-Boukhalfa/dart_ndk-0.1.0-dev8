@@ -92,6 +92,10 @@ class Nip01Event {
     };
   }
 
+  String toJsonStringified() {
+    return jsonEncode(toJson());
+  }
+
   void sign(String privateKey) {
     sig = Bip340.sign(id, privateKey);
   }
