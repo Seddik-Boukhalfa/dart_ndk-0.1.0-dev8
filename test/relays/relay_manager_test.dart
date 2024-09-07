@@ -222,23 +222,24 @@ void main() async {
       /// query text notes for all keys, should discover where each key keeps its notes (according to nip65) and return all notes
       /// only relay 1,2 & 4 should be used, since relay 3 keys are all also kept on relay 1 so should not be needed
       RelaySet relaySet = await manager.calculateRelaySet(
-          name: "feed",
-          ownerPubKey: "ownerPubKey",
-          pubKeys: [
-            key1.publicKey,
-            key2.publicKey,
-            key3.publicKey,
-            key4.publicKey
-          ],
-          direction: RelayDirection.outbox,
-          relayMinCountPerPubKey: 1,
-          onProgress: (stepName, count, total) {
-            if (count % 100 == 0 || (total - count) < 10) {
-              if (kDebugMode) {
-                print("[PROGRESS] $stepName: $count/$total");
-              }
+        name: "feed",
+        ownerPubKey: "ownerPubKey",
+        pubKeys: [
+          key1.publicKey,
+          key2.publicKey,
+          key3.publicKey,
+          key4.publicKey
+        ],
+        direction: RelayDirection.outbox,
+        relayMinCountPerPubKey: 1,
+        onProgress: (stepName, count, total) {
+          if (count % 100 == 0 || (total - count) < 10) {
+            if (kDebugMode) {
+              print("[PROGRESS] $stepName: $count/$total");
             }
-          });
+          }
+        },
+      );
       if (kDebugMode) {
         print("BEST ${relaySet.relaysMap.length} RELAYS:");
       }

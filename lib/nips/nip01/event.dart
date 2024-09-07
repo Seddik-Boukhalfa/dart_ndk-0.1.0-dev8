@@ -148,6 +148,11 @@ class Nip01Event {
     return tags;
   }
 
+  String? get dTag {
+    final sTags = getTags(tags, "d");
+    return sTags.isEmpty ? null : sTags.first;
+  }
+
   List<String> get tTags {
     return getTags(tags, "t");
   }

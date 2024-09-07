@@ -180,7 +180,7 @@ class MemCacheManager implements CacheManager {
   }
 
   @override
-  Nip01Event? loadEvent(String id) {
+  Nip01Event? loadEvent(String id, bool r) {
     return events[id];
   }
 

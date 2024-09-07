@@ -9,8 +9,9 @@ import 'nips/nip05/nip05.dart';
 abstract class CacheManager {
   Future<void> saveEvent(Nip01Event event);
   Future<void> saveEvents(List<Nip01Event> events);
-  Nip01Event? loadEvent(String id);
-  List<Nip01Event> loadEvents({List<String> pubKeys, List<int> kinds, String? pTag});
+  Nip01Event? loadEvent(String id, bool r);
+  List<Nip01Event> loadEvents(
+      {List<String> pubKeys, List<int> kinds, String? pTag});
   Future<void> removeEvent(String id);
   Future<void> removeAllEventsByPubKey(String pubKey);
   Future<void> removeAllEvents();
@@ -46,5 +47,4 @@ abstract class CacheManager {
   List<Nip05?> loadNip05s(List<String> pubKeys);
   Future<void> removeNip05(String pubKey);
   Future<void> removeAllNip05s();
-
 }
