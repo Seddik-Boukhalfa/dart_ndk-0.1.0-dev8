@@ -10,7 +10,8 @@ class Filter {
   List<String>? tTags; // # tags
   List<String>? aTags; // a tags
   List<String>? dTags; // dTags;
-  List<String>? lTags; // l tags
+  List<String>? lTags;
+  List<String>? qTags; // l tags
 
   int? since;
   int? until;
@@ -42,6 +43,7 @@ class Filter {
     aTags = map['#a'] == null ? null : List<String>.from(map['#a']);
     dTags = map['#d'] == null ? null : List<String>.from(map['#d']);
     lTags = map['#l'] == null ? null : List<String>.from(map['#l']);
+    qTags = map['#q'] == null ? null : List<String>.from(map['#q']);
     search = map['search'];
     since = map['since'];
     until = map['until'];
@@ -59,6 +61,7 @@ class Filter {
       "#d": dTags,
       "#a": aTags,
       "#l": lTags,
+      "#q": qTags,
       "since": since,
       "until": until,
       "search": search,
