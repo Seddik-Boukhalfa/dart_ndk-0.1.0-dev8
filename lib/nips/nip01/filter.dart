@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 class Filter {
   List<String>? ids;
   List<String>? authors;
@@ -8,13 +9,28 @@ class Filter {
   List<String>? pTags; // pubKey tags
   List<String>? tTags; // # tags
   List<String>? aTags; // a tags
-  List<String>? dTags; // a tags
+  List<String>? dTags; // dTags;
+  List<String>? lTags; // l tags
 
   int? since;
   int? until;
   int? limit;
 
-  Filter({this.ids, this.authors, this.kinds, this.eTags, this.pTags, this.tTags, this.aTags, this.dTags, this.since, this.until, this.limit});
+  Filter({
+    this.ids,
+    this.authors,
+    this.kinds,
+    this.search,
+    this.eTags,
+    this.pTags,
+    this.tTags,
+    this.aTags,
+    this.dTags,
+    this.lTags,
+    this.since,
+    this.until,
+    this.limit,
+  });
 
   Filter.fromMap(Map<String, dynamic> map) {
     ids = map['ids'] == null ? null : List<String>.from(map['ids']);
@@ -25,6 +41,7 @@ class Filter {
     tTags = map['#t'] == null ? null : List<String>.from(map['#t']);
     aTags = map['#a'] == null ? null : List<String>.from(map['#a']);
     dTags = map['#d'] == null ? null : List<String>.from(map['#d']);
+    lTags = map['#l'] == null ? null : List<String>.from(map['#l']);
     search = map['search'];
     since = map['since'];
     until = map['until'];
@@ -41,12 +58,13 @@ class Filter {
       "#t": tTags,
       "#d": dTags,
       "#a": aTags,
+      "#l": lTags,
       "since": since,
       "until": until,
       "search": search,
       "limit": limit,
     };
-    // remove null values
+
     body.removeWhere((key, value) => value == null);
 
     return body;
