@@ -1031,12 +1031,16 @@ class RelayManager {
   Future<Nip01Event?> getSingleMetadataEvent(EventSigner signer) async {
     Nip01Event? loaded;
     await for (final event in (await requestRelays(
-            bootstrapRelays,
-            timeout: DEFAULT_STREAM_IDLE_TIMEOUT,
-            Filter(
-                kinds: [Metadata.KIND],
-                authors: [signer.getPublicKey()],
-                limit: 1)))
+      bootstrapRelays,
+      timeout: DEFAULT_STREAM_IDLE_TIMEOUT,
+      [
+        Filter(
+          kinds: [Metadata.KIND],
+          authors: [signer.getPublicKey()],
+          limit: 1,
+        ),
+      ],
+    ))
         .stream) {
       if (loaded == null || loaded.createdAt < event.createdAt) {
         loaded = event;
@@ -1264,7 +1268,7 @@ class RelayManager {
 
   Future<NostrRequest> requestRelays(
     Iterable<String> urls,
-    Filter filter, {
+    List<Filter> filters, {
     int timeout = DEFAULT_STREAM_IDLE_TIMEOUT,
     bool closeOnEOSE = true,
     Function()? onTimeout,
@@ -1286,7 +1290,9 @@ class RelayManager {
         : NostrRequest.subscription(id, eventVerifier: eventVerifier);
 
     for (var url in urls) {
-      nostrRequest.addRequest(url, RelaySet.sliceFilterAuthors(filter));
+      for (final filter in filters) {
+        nostrRequest.addRequest(url, RelaySet.sliceFilterAuthors(filter));
+      }
     }
 
     nostrRequests[nostrRequest.id] = nostrRequest;
@@ -1491,11 +1497,18 @@ class RelayManager {
       }
       try {
         await for (final event in (await requestRelays(
-                timeout: missingPubKeys.length > 1 ? 10 : 3,
-                bootstrapRelays,
-                Filter(
-                    authors: missingPubKeys,
-                    kinds: [Nip65.KIND, ContactList.KIND])))
+          timeout: missingPubKeys.length > 1 ? 10 : 3,
+          bootstrapRelays,
+          [
+            Filter(
+              authors: missingPubKeys,
+              kinds: [
+                Nip65.KIND,
+                ContactList.KIND,
+              ],
+            ),
+          ],
+        ))
             .stream) {
           switch (event.kind) {
             case Nip65.KIND:
@@ -1626,9 +1639,16 @@ class RelayManager {
       ContactList? loadedContactList;
       try {
         await for (final event in (await requestRelays(
-                bootstrapRelays,
-                timeout: idleTimeout,
-                Filter(kinds: [ContactList.KIND], authors: [pubKey], limit: 1)))
+          bootstrapRelays,
+          timeout: idleTimeout,
+          [
+            Filter(
+              kinds: [ContactList.KIND],
+              authors: [pubKey],
+              limit: 1,
+            ),
+          ],
+        ))
             .stream) {
           if (loadedContactList == null ||
               loadedContactList.createdAt < event.createdAt) {
@@ -1659,9 +1679,16 @@ class RelayManager {
       Metadata? loadedMetadata;
       try {
         await for (final event in (await requestRelays(
-                bootstrapRelays,
-                timeout: idleTimeout,
-                Filter(kinds: [Metadata.KIND], authors: [pubKey], limit: 1)))
+          bootstrapRelays,
+          timeout: idleTimeout,
+          [
+            Filter(
+              kinds: [Metadata.KIND],
+              authors: [pubKey],
+              limit: 1,
+            ),
+          ],
+        ))
             .stream) {
           if (loadedMetadata == null ||
               loadedMetadata.updatedAt == null ||
@@ -1821,19 +1848,26 @@ class RelayManager {
         : null;
   }
 
-  Future<Nip51List?> getSingleNip51List(int kind, EventSigner signer,
-      {bool forceRefresh = false, int timeout = 5}) async {
+  Future<Nip51List?> getSingleNip51List(
+    int kind,
+    EventSigner signer, {
+    bool forceRefresh = false,
+    int timeout = 5,
+  }) async {
     Nip51List? list =
         !forceRefresh ? await getCachedNip51List(kind, signer) : null;
     if (list == null) {
       Nip51List? refreshedList;
       await for (final event in (await requestRelays(
-              bootstrapRelays.toList(),
-              Filter(
-                authors: [signer.getPublicKey()],
-                kinds: [kind],
-              ),
-              timeout: timeout))
+        bootstrapRelays.toList(),
+        [
+          Filter(
+            authors: [signer.getPublicKey()],
+            kinds: [kind],
+          ),
+        ],
+        timeout: timeout,
+      ))
           .stream) {
         if (refreshedList == null ||
             refreshedList.createdAt <= event.createdAt) {
@@ -1851,7 +1885,9 @@ class RelayManager {
   }
 
   Future<Nip51Set?> getCachedNip51RelaySet(
-      String name, EventSigner signer) async {
+    String name,
+    EventSigner signer,
+  ) async {
     List<Nip01Event>? events = cacheManager.loadEvents(
         pubKeys: [signer.getPublicKey()], kinds: [Nip51List.RELAY_SET]);
     events = events.where((event) {
@@ -1868,19 +1904,25 @@ class RelayManager {
         : null;
   }
 
-  Future<Nip51Set?> getSingleNip51RelaySet(String name, EventSigner signer,
-      {bool forceRefresh = false}) async {
+  Future<Nip51Set?> getSingleNip51RelaySet(
+    String name,
+    EventSigner signer, {
+    bool forceRefresh = false,
+  }) async {
     Nip51Set? relaySet = await getCachedNip51RelaySet(name, signer);
     if (relaySet == null || forceRefresh) {
       Nip51Set? newRelaySet;
       await for (final event in (await requestRelays(
-              bootstrapRelays.toList(),
-              Filter(
-                authors: [signer.getPublicKey()],
-                kinds: [Nip51List.RELAY_SET],
-                dTags: [name],
-              ),
-              timeout: 5))
+        bootstrapRelays.toList(),
+        [
+          Filter(
+            authors: [signer.getPublicKey()],
+            kinds: [Nip51List.RELAY_SET],
+            dTags: [name],
+          ),
+        ],
+        timeout: 5,
+      ))
           .stream) {
         if (newRelaySet == null || newRelaySet.createdAt < event.createdAt) {
           if (event.getDtag() != null && event.getDtag() == name) {
@@ -1901,17 +1943,22 @@ class RelayManager {
     return relaySet;
   }
 
-  Future<List<Nip51Set>?> getNip51RelaySets(int kind, EventSigner signer,
-      {bool forceRefresh = false}) async {
+  Future<List<Nip51Set>?> getNip51RelaySets(
+    int kind,
+    EventSigner signer, {
+    bool forceRefresh = false,
+  }) async {
     Nip51Set? relaySet; //getCachedNip51RelaySets(signer);
     if (relaySet == null || forceRefresh) {
       Map<String, Nip51Set> newRelaySets = {};
       await for (final event in (await requestRelays(
         bootstrapRelays.toList(),
-        Filter(
-          authors: [signer.getPublicKey()],
-          kinds: [kind],
-        ),
+        [
+          Filter(
+            authors: [signer.getPublicKey()],
+            kinds: [kind],
+          ),
+        ],
         timeout: 5,
       ))
           .stream) {

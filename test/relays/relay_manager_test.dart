@@ -82,7 +82,7 @@ void main() async {
           Filter(kinds: [Nip01Event.TEXT_NODE_KIND], authors: [key1.publicKey]);
 
       Stream<Nip01Event> query =
-          (await manager.requestRelays([relay1.url], filter)).stream;
+          (await manager.requestRelays([relay1.url], [filter])).stream;
 
       expect(query, emitsInAnyOrder(key1TextNotes.values));
 
@@ -98,8 +98,9 @@ void main() async {
       await manager.connect(urls: [relay1.url]);
       Stream<Nip01Event> stream = (await manager.requestRelays([
         relay1.url
-      ], Filter(authors: [key1.publicKey], kinds: [Nip01Event.TEXT_NODE_KIND]),
-              timeout: 2))
+      ], [
+        Filter(authors: [key1.publicKey], kinds: [Nip01Event.TEXT_NODE_KIND])
+      ], timeout: 2))
           .stream;
       // ignore: unused_local_variable
       await for (final event in stream) {
