@@ -4,7 +4,6 @@ class Filter {
   List<String>? authors;
   List<int>? kinds;
   String? search;
-
   List<String>? eTags; // event tags
   List<String>? pTags; // pubKey tags
   List<String>? tTags; // # tags
@@ -25,6 +24,7 @@ class Filter {
     this.eTags,
     this.pTags,
     this.tTags,
+    this.qTags,
     this.aTags,
     this.dTags,
     this.lTags,
