@@ -246,6 +246,8 @@ class DbCacheManager extends CacheManager {
         .splitDisplayNameWordsElementStartsWith(search)
         .or()
         .splitNameWordsElementStartsWith(search)
+        .or()
+        .nip05Contains(search)
         .findAll()
         .take(limit);
   }
