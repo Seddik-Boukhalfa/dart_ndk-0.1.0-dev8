@@ -162,6 +162,11 @@ class MemCacheManager implements CacheManager {
   }
 
   @override
+  List<Metadata> getAllMetadatas() {
+    throw metadatas.values.toList();
+  }
+
+  @override
   List<Metadata?> loadMetadatas(List<String> pubKeys) {
     List<Metadata> result = [];
     for (String pubKey in pubKeys) {
@@ -175,7 +180,6 @@ class MemCacheManager implements CacheManager {
 
   @override
   Iterable<Metadata> searchMetadatas(String search, int limit) {
-    /// TODO
     return [];
   }
 
