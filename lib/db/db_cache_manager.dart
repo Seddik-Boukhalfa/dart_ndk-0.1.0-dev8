@@ -235,6 +235,11 @@ class DbCacheManager extends CacheManager {
   }
 
   @override
+  List<Metadata> getAllMetadatas() {
+    return isar.dbMetadatas.where().findAll();
+  }
+
+  @override
   List<Metadata?> loadMetadatas(List<String> pubKeys) {
     return isar.dbMetadatas.getAll(pubKeys);
   }
