@@ -376,7 +376,12 @@ class DbCacheManager extends CacheManager {
   Nip01Event? loadEvent(String id, bool r) {
     Nip01Event? event;
     if (r) {
-      event = isar.dbEvents.where().dTagEqualTo(id).findAll().first;
+      final evs = isar.dbEvents.where().dTagEqualTo(id).findAll();
+      if (evs.isEmpty) {
+        return null;
+      }
+
+      return evs.first;
     } else {
       event = isar.dbEvents.get(id);
     }
