@@ -15,6 +15,7 @@ abstract class CacheManager {
   Future<void> removeEvent(String id);
   Future<void> removeAllEventsByPubKey(String pubKey);
   Future<void> removeAllEvents();
+  Future<void> removeAllEventsByKinds(List<int> kinds);
 
   Future<void> saveUserRelayList(UserRelayList userRelayList);
   Future<void> saveUserRelayLists(List<UserRelayList> userRelayLists);

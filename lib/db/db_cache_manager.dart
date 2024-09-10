@@ -399,6 +399,15 @@ class DbCacheManager extends CacheManager {
   }
 
   @override
+  Future<void> removeAllEventsByKinds(List<int> kinds) async {
+    isar.write((isar) {
+      for (var kind in kinds) {
+        isar.dbEvents.where().kindEqualTo(kind).deleteAll();
+      }
+    });
+  }
+
+  @override
   Future<void> removeAllEvents() async {
     isar.write((isar) {
       isar.dbEvents.clear();

@@ -237,4 +237,13 @@ class MemCacheManager implements CacheManager {
       this.events[e.id] = e;
     }
   }
+
+  @override
+  Future<void> removeAllEventsByKinds(List<int> kinds) async {
+    for (final e in events.entries) {
+      if (kinds.contains(e.value.kind)) {
+        events.remove(e.key);
+      }
+    }
+  }
 }
