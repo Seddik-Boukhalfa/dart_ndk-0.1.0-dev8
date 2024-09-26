@@ -25,13 +25,10 @@ class DbCacheManager extends CacheManager {
   EventFilter? eventFilter;
 
   Future<void> init({String? directory}) async {
-    // await Isar.initialize("./libisar_android_armv7.so");//initializeIsarCore(download: true);
-
-    // final dir = await getApplicationDocumentsDirectory();
-    // final dir = Directory.systemTemp.createTempSync()
     if (directory == Isar.sqliteInMemory) {
       await Isar.initialize();
     }
+
     isar = Isar.open(
       name: "db_ndk_${kDebugMode ? "debug" : "release"}",
       inspector: kDebugMode,
@@ -53,9 +50,6 @@ class DbCacheManager extends CacheManager {
         DbNip05Schema
       ],
     );
-    // isar.write((isar) {
-    //   isar.clear();
-    // });
   }
 
   @override
@@ -412,5 +406,19 @@ class DbCacheManager extends CacheManager {
     isar.write((isar) {
       isar.dbEvents.clear();
     });
+  }
+
+  @override
+  Future<void> clearData() async {
+    Future.wait(
+      [
+        removeAllContactLists(),
+        removeAllEvents(),
+        removeAllMetadatas(),
+        removeAllNip05s(),
+        removeAllRelaySets(),
+        removeAllUserRelayLists(),
+      ],
+    );
   }
 }

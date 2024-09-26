@@ -200,8 +200,11 @@ class Nip51ListElement {
   String tag;
   String value;
 
-  Nip51ListElement(
-      {required this.tag, required this.value, required this.private});
+  Nip51ListElement({
+    required this.tag,
+    required this.value,
+    required this.private,
+  });
 }
 
 class Nip51Set extends Nip51List {
@@ -229,7 +232,9 @@ class Nip51Set extends Nip51List {
             createdAt: createdAt);
 
   static Future<Nip51Set?> fromEvent(
-      Nip01Event event, EventSigner? signer) async {
+    Nip01Event event,
+    EventSigner? signer,
+  ) async {
     String? name = event.getDtag();
     if (name == null || event.kind != Nip51List.RELAY_SET) {
       return null;

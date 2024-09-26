@@ -81,10 +81,7 @@ class RelayManager {
       httpClient!.connectionTimeout = const Duration(seconds: 5);
     }
   }
-  // ====================================================================================================================
 
-  /// This will initialize the manager with bootstrap relays.
-  /// If you don't give any, will use some predefined
   Future<void> connect({
     Iterable<String> urls = DEFAULT_BOOTSTRAP_RELAYS,
   }) async {
@@ -387,7 +384,12 @@ class RelayManager {
     );
 
     sendsMap[event.id] = sends;
-    await Future.wait(relays.map((url) => broadcastSignedEvent(event, url)));
+
+    await Future.wait(
+      relays.map(
+        (relay) => broadcastSignedEvent(event, relay),
+      ),
+    );
   }
 
   Future<void> broadcastSignedEvent(
@@ -456,6 +458,7 @@ class RelayManager {
 
   // if cached contact list is older that now minus this duration that we should go refresh it,
   // otherwise we risk adding/removing contacts to a list that is out of date and thus loosing contacts other client has added/removed since.
+
   static const Duration REFRESH_CONTACT_LIST_DURATION = Duration(minutes: 10);
 
   Future<ContactList> ensureUpToDateContactListOrEmpty(
@@ -463,10 +466,12 @@ class RelayManager {
   ) async {
     ContactList? contactList =
         cacheManager.loadContactList(signer.getPublicKey());
+
     int sometimeAgo = DateTime.now()
             .subtract(REFRESH_CONTACT_LIST_DURATION)
             .millisecondsSinceEpoch ~/
         1000;
+
     bool refresh = contactList == null ||
         contactList.loadedTimestamp == null ||
         contactList.loadedTimestamp! < sometimeAgo;
@@ -683,15 +688,17 @@ class RelayManager {
     OKCallBack okCallBack,
   ) async {
     UserRelayList? userRelayList = await ensureUpToDateUserRelayList(signer);
+
     if (userRelayList == null) {
       int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       userRelayList = UserRelayList(
-          pubKey: signer.getPublicKey(),
-          relays: {
-            for (String url in broadcastRelays) url: ReadWriteMarker.readWrite
-          },
-          createdAt: now,
-          refreshedTimestamp: now);
+        pubKey: signer.getPublicKey(),
+        relays: {
+          for (String url in broadcastRelays) url: ReadWriteMarker.readWrite
+        },
+        createdAt: now,
+        refreshedTimestamp: now,
+      );
     }
 
     if (userRelayList.relays.keys.contains(relayUrl)) {
@@ -731,17 +738,21 @@ class RelayManager {
           createdAt: now,
           refreshedTimestamp: now);
     }
+
     String? url;
+
     if (userRelayList.relays.keys.contains(relayUrl)) {
       url = relayUrl;
     } else {
       String? cleanUrl = Relay.clean(relayUrl);
+
       if (cleanUrl != null && userRelayList.relays.keys.contains(cleanUrl)) {
         url = cleanUrl;
       } else if (userRelayList.relays.keys.contains("$relayUrl/")) {
         url = "$relayUrl/";
       }
     }
+
     if (url != null) {
       userRelayList.relays[url] = marker;
       userRelayList.refreshedTimestamp = Helpers.now;
@@ -768,13 +779,17 @@ class RelayManager {
       throw Exception(
           "cannot broadcast private nip51 list without a signer that can sign");
     }
+
     Nip51Set? list =
         await getSingleNip51RelaySet(name, signer, forceRefresh: true);
+
     list ??= Nip51Set(
-        name: name,
-        pubKey: signer.getPublicKey(),
-        createdAt: Helpers.now,
-        elements: []);
+      name: name,
+      pubKey: signer.getPublicKey(),
+      createdAt: Helpers.now,
+      elements: [],
+    );
+
     list.addRelay(relayUrl, private);
     list.createdAt = Helpers.now;
     Nip01Event event = await list.toEvent(signer);
@@ -1335,20 +1350,22 @@ class RelayManager {
   }
 
   /// relay -> list of pubKey mappings
-  Future<RelaySet> calculateRelaySet(
-      {required String name,
-      required String ownerPubKey,
-      required List<String> pubKeys,
-      required RelayDirection direction,
-      required int relayMinCountPerPubKey,
-      Function(String, int, int)? onProgress}) async {
+  Future<RelaySet> calculateRelaySet({
+    required String name,
+    required String ownerPubKey,
+    required List<String> pubKeys,
+    required RelayDirection direction,
+    required int relayMinCountPerPubKey,
+    Function(String, int, int)? onProgress,
+  }) async {
     RelaySet byScore = await _relaysByPopularity(
-        name: name,
-        ownerPubKey: ownerPubKey,
-        pubKeys: pubKeys,
-        direction: direction,
-        relayMinCountPerPubKey: relayMinCountPerPubKey,
-        onProgress: onProgress);
+      name: name,
+      ownerPubKey: ownerPubKey,
+      pubKeys: pubKeys,
+      direction: direction,
+      relayMinCountPerPubKey: relayMinCountPerPubKey,
+      onProgress: onProgress,
+    );
 
     /// try by score
     if (byScore.relaysMap.isNotEmpty) {
@@ -1385,13 +1402,14 @@ class RelayManager {
   ///   - check if relay is connected or can connect
   ///   - for each pubKey mapped for given relay check if you already have minimum amount of relay coverage (use auxiliary map to remember this)
   ///     - if not add this relay to list of best relays
-  Future<RelaySet> _relaysByPopularity(
-      {required String name,
-      required String ownerPubKey,
-      required List<String> pubKeys,
-      required RelayDirection direction,
-      required int relayMinCountPerPubKey,
-      Function(String stepName, int count, int total)? onProgress}) async {
+  Future<RelaySet> _relaysByPopularity({
+    required String name,
+    required String ownerPubKey,
+    required List<String> pubKeys,
+    required RelayDirection direction,
+    required int relayMinCountPerPubKey,
+    Function(String stepName, int count, int total)? onProgress,
+  }) async {
     await loadMissingRelayListsFromNip65OrNip02(pubKeys,
         onProgress: onProgress);
 
@@ -1473,17 +1491,19 @@ class RelayManager {
             .toList());
   }
 
-  Future<void> loadMissingRelayListsFromNip65OrNip02(List<String> pubKeys,
-      {Function(String stepName, int count, int total)? onProgress,
-      bool forceRefresh = false}) async {
+  Future<void> loadMissingRelayListsFromNip65OrNip02(
+    List<String> pubKeys, {
+    Function(String stepName, int count, int total)? onProgress,
+    bool forceRefresh = false,
+  }) async {
     List<String> missingPubKeys = [];
     for (var pubKey in pubKeys) {
       UserRelayList? userRelayList = cacheManager.loadUserRelayList(pubKey);
       if (userRelayList == null || forceRefresh) {
-        // TODO check if not too old (time passed since last refreshed timestamp)
         missingPubKeys.add(pubKey);
       }
     }
+
     Map<String, UserRelayList> fromNip65s = {};
     Map<String, UserRelayList> fromNip02Contacts = {};
     Set<ContactList> contactLists = {};
@@ -1671,10 +1691,13 @@ class RelayManager {
     return contactList;
   }
 
-  Future<Metadata?> getSingleMetadata(String pubKey,
-      {bool forceRefresh = false,
-      int idleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT}) async {
+  Future<Metadata?> getSingleMetadata(
+    String pubKey, {
+    bool forceRefresh = false,
+    int idleTimeout = DEFAULT_STREAM_IDLE_TIMEOUT,
+  }) async {
     Metadata? metadata = cacheManager.loadMetadata(pubKey);
+
     if (metadata == null || forceRefresh) {
       Metadata? loadedMetadata;
       try {
@@ -1714,7 +1737,9 @@ class RelayManager {
   }
 
   _buildPubKeysMapFromRelayLists(
-      List<String> pubKeys, RelayDirection direction) async {
+    List<String> pubKeys,
+    RelayDirection direction,
+  ) async {
     Map<String, Set<PubkeyMapping>> pubKeysByRelayUrl = {};
     int foundCount = 0;
     for (String pubKey in pubKeys) {
@@ -1723,17 +1748,21 @@ class RelayManager {
         if (userRelayList.relays.isNotEmpty) {
           foundCount++;
         }
+
         for (var entry in userRelayList.relays.entries) {
           _handleRelayUrlForPubKey(
               pubKey, direction, entry.key, entry.value, pubKeysByRelayUrl);
         }
       } else {
         int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-        await cacheManager.saveUserRelayList(UserRelayList(
+        await cacheManager.saveUserRelayList(
+          UserRelayList(
             pubKey: pubKey,
             relays: {},
             createdAt: now,
-            refreshedTimestamp: now));
+            refreshedTimestamp: now,
+          ),
+        );
       }
     }
     print(

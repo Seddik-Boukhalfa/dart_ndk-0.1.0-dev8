@@ -49,4 +49,6 @@ abstract class CacheManager {
   List<Nip05?> loadNip05s(List<String> pubKeys);
   Future<void> removeNip05(String pubKey);
   Future<void> removeAllNip05s();
+
+  Future<void> clearData();
 }

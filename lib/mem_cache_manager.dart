@@ -246,4 +246,18 @@ class MemCacheManager implements CacheManager {
       }
     }
   }
+
+  @override
+  Future<void> clearData() async {
+    Future.wait(
+      [
+        removeAllContactLists(),
+        removeAllEvents(),
+        removeAllMetadatas(),
+        removeAllNip05s(),
+        removeAllRelaySets(),
+        removeAllUserRelayLists(),
+      ],
+    );
+  }
 }
